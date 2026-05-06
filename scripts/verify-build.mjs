@@ -9,7 +9,8 @@ const REQUIRED = [
   "about/index.html",
   "indicators/index.html",
   "actors/index.html",
-  "cohorts/regenerant-catalunya/index.html",
+  "programs/regenerant-catalunya/index.html",
+  "programs/regenerant-catalunya/article/index.html",
   "geo/catalunya-comarques.geojson",
   "CNAME",
 ];
@@ -26,7 +27,7 @@ for (const path of REQUIRED) {
 }
 
 // Sanity: cohort page must reference all 11 projects by id.
-const cohort = readFileSync(join(DIST, "cohorts/regenerant-catalunya/index.html"), "utf8");
+const cohort = readFileSync(join(DIST, "programs/regenerant-catalunya/index.html"), "utf8");
 const expectedIds = [
   "regeneracio-xyz", "resilience-earth", "de-bat-a-bat", "chapter-2", "anigami", "mixite",
   "laurel-31", "la-marmita", "les-juntes", "la-suculenta", "la-granja-del-tilo",

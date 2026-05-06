@@ -1,8 +1,8 @@
 ---
-// src/pages/cohorts/regenerant-catalunya.astro
-import Layout from "../../components/Layout.astro";
-import NetworkSection from "../../components/NetworkSection.astro";
-import CatalunyaInsetMap from "../../components/CatalunyaInsetMap.astro";
+// src/pages/programs/regenerant-catalunya/index.astro
+import Layout from "../../../components/Layout.astro";
+import NetworkSection from "../../../components/NetworkSection.astro";
+import CatalunyaInsetMap from "../../../components/CatalunyaInsetMap.astro";
 import { getCollection } from "astro:content";
 
 const entries = await getCollection("cohort");
@@ -13,9 +13,9 @@ const fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR",
 const totalMatching = doc.networks.miceli.contribution_eur + doc.networks["keras-buti"].contribution_eur;
 ---
 
-<Layout title="Regenerant Catalunya · Cohort" current="cohorts" dataset="Regenerant Catalunya">
+<Layout title="Regenerant Catalunya · Program" current="programs" dataset="Regenerant Catalunya">
   <section class="hero">
-    <p class="eyebrow">Cohort · 2025–2026 · GG24</p>
+    <p class="eyebrow">Program · 2025–2026 · GG24</p>
     <h1>Regenerant Catalunya</h1>
     <p class="lede">
       11 projects · 2 networks · {fmt.format(totalMatching)} matching pool · funded through Gitcoin Grants Round 24.

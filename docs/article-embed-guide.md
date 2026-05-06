@@ -1,38 +1,35 @@
-# Article-embed guide — RC Cohort Map
+# Article-embed guide — RC Program Map
 
-## Recommended: direct link
+## Recommended: direct link to the article-companion view
 
-Embed the cohort page in the retrospective article via a hyperlink rather than an iframe:
+Embed the program in the retrospective article via a hyperlink to the article-companion route — a purpose-built minimal-chrome view (no top nav, no footer) designed for exactly this use case:
 
-> Explore the full Regenerant Catalunya cohort →
-> [bioregional.refibcn.cat/cohorts/regenerant-catalunya](https://bioregional.refibcn.cat/cohorts/regenerant-catalunya/)
+> Explore the full Regenerant Catalunya program →
+> [bioregional.refibcn.cat/programs/regenerant-catalunya/article/](https://bioregional.refibcn.cat/programs/regenerant-catalunya/article/)
 >
-> _(fallback: [luizfernandosg.github.io/bioregional-intelligence/cohorts/regenerant-catalunya/](https://luizfernandosg.github.io/bioregional-intelligence/cohorts/regenerant-catalunya/))_
+> _(fallback: [luizfernandosg.github.io/bioregional-intelligence/programs/regenerant-catalunya/article/](https://luizfernandosg.github.io/bioregional-intelligence/programs/regenerant-catalunya/article/))_
 
 Pair the link with one or two screenshots above the fold so the article is readable without leaving the page.
 
 ### Why direct link, not iframe
 
-- The dashboard is publicly browsable on its own and reads as a richer artifact than an iframe embed.
+- The `/article/` route is purpose-built for this — no nav, no footer, ready to embed-or-link directly from the RC retrospective article.
+- The full dashboard (`/programs/regenerant-catalunya/`) remains publicly browsable in the BIS chrome for visitors who arrive via the BIS homepage.
 - Quartz's content layout interacts badly with iframes (height collapsing, scroll capture).
 - Updating the dashboard doesn't require re-embedding in the article.
 
 ## If you really need an iframe
 
-A future `?embed=1` mode is planned (lands as a small follow-up if needed). It strips the top nav and footer for clean iframe rendering. **Not implemented in V1.**
-
-If the article timeline forces an iframe before that mode lands, embed with explicit height:
+The `/article/` route is already minimal-chrome, making it much more suitable for iframe embedding than the full dashboard view:
 
 ```html
 <iframe
-  src="https://bioregional.refibcn.cat/cohorts/regenerant-catalunya/"
+  src="https://bioregional.refibcn.cat/programs/regenerant-catalunya/article/"
   width="100%" height="2400" frameborder="0"
   loading="lazy"
-  title="Regenerant Catalunya cohort map">
+  title="Regenerant Catalunya program map">
 </iframe>
 ```
-
-…and accept that the chrome will show through. Then file a follow-up issue requesting `?embed=1`.
 
 ## Screenshots for the article
 
@@ -45,6 +42,9 @@ Save as PNG, ≤500KB each (compress with `pngquant` or similar).
 
 ## URL hygiene
 
-The canonical URL is **`https://bioregional.refibcn.cat/cohorts/regenerant-catalunya/`** (note trailing slash — Astro emits directory-format URLs).
+Two canonical URLs:
 
-If the custom domain isn't resolving by the article ship date, use the GitHub Pages URL as a temporary primary link, but plan to swap to the custom domain when it lands.
+- **Article-companion view** (recommended for the RC article): `https://bioregional.refibcn.cat/programs/regenerant-catalunya/article/`
+- **Full dashboard view** (BIS chrome, for BIS homepage navigation): `https://bioregional.refibcn.cat/programs/regenerant-catalunya/`
+
+Both use directory-format URLs (trailing slash — Astro default). If the custom domain isn't resolving by the article ship date, use the GitHub Pages fallback URLs listed above.

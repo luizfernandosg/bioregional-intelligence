@@ -13,7 +13,7 @@ We combine both, scoped to Catalunya as bioregion.
 
 ## Three current modes (V1)
 
-1. **Cohort Maps** — public showcases of project cohorts (Regenerant Catalunya is the first; future cohorts follow). Editorial, narrative, screenshot-friendly.
+1. **Programs** — public showcases of project cohorts and local funding programs (Regenerant Catalunya is the first; future programs follow). Each program has both a dashboard view (lives in BIS chrome) and an article-companion view (minimal chrome, ready to embed in or link from the program's narrative page on the host site). Editorial, screenshot-friendly.
 2. **Actors** — the ecosystem-network view (ported from `refi-bcn-os/packages/maps/catalunya-actor-map/v0`). Internal-team-style ecosystem orientation.
 3. **Indicators** — bioregional-health signals (in development; first indicator TBD).
 

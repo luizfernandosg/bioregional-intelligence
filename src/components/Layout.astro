@@ -8,14 +8,18 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description?: string;
-  current?: "home" | "cohorts" | "actors" | "indicators" | "about";
+  current?: "home" | "programs" | "actors" | "indicators" | "about";
   dataset?: string;
+  // When true, drops the BIS dashboard chrome (top nav, footer) — used by the
+  // article-companion route at /programs/regenerant-catalunya/article/.
+  minimal?: boolean;
 }
 const {
   title,
   description = "ReFi BCN — Bioregional Intelligence System for Catalunya — actor maps, cohort showcases, indicator tracking.",
   current,
   dataset,
+  minimal = false,
 } = Astro.props;
 ---
 
@@ -30,11 +34,11 @@ const {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
 </head>
-<body>
-  <Nav current={current} dataset={dataset} />
+<body class:list={{ minimal }}>
+  {!minimal && <Nav current={current} dataset={dataset} />}
   <main>
     <slot />
   </main>
-  <Footer />
+  {!minimal && <Footer />}
 </body>
 </html>
