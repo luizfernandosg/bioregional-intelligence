@@ -28,6 +28,34 @@ const markerFeatures = projects.map((p) => ({
 }));
 const markersGeoJson = { type: "FeatureCollection" as const, features: markerFeatures };
 
+// Comarques (NOMCOMAR field in the GeoJSON) that contain a confirmed project.
+const PROJECT_COMARQUES = new Set([
+  "Garrotxa",
+  "Anoia",
+  "Bages",
+  "Berguedà",
+  "Barcelonès",
+  "Baix Llobregat",
+  "Ripollès",
+]);
+
+// Network anchor nodes GeoJSON
+const networkNodesGeoJson = {
+  type: "FeatureCollection" as const,
+  features: [
+    {
+      type: "Feature" as const,
+      geometry: { type: "Point" as const, coordinates: [2.20, 42.20] },
+      properties: { id: "miceli", label: "MICELI SOCIAL", role: "Rural network", network: "miceli" },
+    },
+    {
+      type: "Feature" as const,
+      geometry: { type: "Point" as const, coordinates: [2.10, 41.36] },
+      properties: { id: "keras-buti", label: "LA FUNDICIÓ / KERAS BUTI", role: "Urban network", network: "keras-buti" },
+    },
+  ],
+};
+
 const cardImage = (p: Project): string => {
   if (p.image) return `${baseUrl}${p.image}`;
   const meta = networks[p.network];
@@ -44,6 +72,9 @@ const cardImage = (p: Project): string => {
       <button class="prov-chip" data-prov="lleida" type="button">Lleida</button>
       <button class="prov-chip" data-prov="girona" type="button">Girona</button>
       <button class="prov-chip" data-prov="lhospitalet" type="button">L'Hospitalet</button>
+      <span class="strip-divider" aria-hidden="true"></span>
+      <button class="prov-chip net-chip" data-network="miceli" data-prov="miceli" type="button">Miceli</button>
+      <button class="prov-chip net-chip" data-network="keras-buti" data-prov="kerasbuti" type="button">La Fundició</button>
     </div>
     <p class="map-hint">Click a marker · Scroll to zoom · Drag to pan</p>
   </div>
@@ -85,6 +116,7 @@ const cardImage = (p: Project): string => {
   </div>
 
   <script type="application/json" data-markers set:html={JSON.stringify(markersGeoJson)}></script>
+  <script type="application/json" data-network-nodes set:html={JSON.stringify(networkNodesGeoJson)}></script>
 </div>
 
 <script>
@@ -110,6 +142,8 @@ const PROVINCE_BOUNDS: Record<string, BBox> = {
   lleida:      [[0.55, 41.30], [1.85, 42.86]],
   girona:      [[1.85, 41.60], [3.32, 42.55]],
   lhospitalet: [[1.95, 41.30], [2.25, 41.42]],
+  miceli:      [[1.30, 41.40], [2.85, 42.55]],   // rural Catalunya cluster
+  kerasbuti:   [[1.95, 41.30], [2.25, 41.42]],   // L'Hospitalet metro
 };
 
 const prefersReducedMotion = () =>
@@ -118,16 +152,18 @@ const prefersReducedMotion = () =>
 document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) => {
   const mapHost = host.querySelector<HTMLDivElement>("[data-maplibre-host]");
   const markersEl = host.querySelector<HTMLScriptElement>("[data-markers]");
+  const networkNodesEl = host.querySelector<HTMLScriptElement>("[data-network-nodes]");
   if (!mapHost || !markersEl) return;
   const geoUrl = host.dataset.geoUrl ?? "/geo/catalunya-comarques.geojson";
   const markersGeo = JSON.parse(markersEl.textContent ?? '{"type":"FeatureCollection","features":[]}');
+  const networkNodesGeo = JSON.parse(networkNodesEl?.textContent ?? '{"type":"FeatureCollection","features":[]}');
 
   const map = new maplibregl.Map({
     container: mapHost,
     style: TILE_STYLE,
     center: [1.7, 41.85],
     zoom: 7.4,
-    minZoom: 7,
+    minZoom: 6,
     maxZoom: 14,
     maxBounds: CATALUNYA_BOUNDS,
     attributionControl: { compact: true },
@@ -142,8 +178,13 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
   map.on("load", async () => {
     // Subtle palette tweaks on top of the positron base — push it toward our paper-and-ink feel.
     desaturateBaseStyle(map);
+    // Hide OSM city/town/village/place labels — keep only our own labels.
+    hideOsmPlaceLabels(map);
 
-    // Comarques overlay (line + faint fill)
+    // Comarques overlay (line + data-driven fill for project comarques + labels)
+    const projectComarquesArr = [
+      "Garrotxa", "Anoia", "Bages", "Berguedà", "Barcelonès", "Baix Llobregat", "Ripollès",
+    ];
     try {
       const geoResp = await fetch(geoUrl);
       const geo = await geoResp.json();
@@ -152,7 +193,15 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
         id: "comarques-fill",
         type: "fill",
         source: "comarques",
-        paint: { "fill-color": "#1d1a16", "fill-opacity": 0.025 },
+        paint: {
+          "fill-color": "#8B5A3C",
+          "fill-opacity": [
+            "case",
+            ["in", ["get", "NOMCOMAR"], ["literal", projectComarquesArr]],
+            0.06,
+            0.0,
+          ],
+        } as any,
       });
       map.addLayer({
         id: "comarques-line",
@@ -165,9 +214,102 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
           "line-opacity": 0.55,
         },
       });
+      // Comarca name labels — subtle, mono caps, only at zoom ≥ 8.5
+      map.addLayer({
+        id: "comarques-label",
+        type: "symbol",
+        source: "comarques",
+        minzoom: 8.5,
+        layout: {
+          "text-field": [
+            "coalesce",
+            ["get", "NOMCOMAR"],
+            ["get", "name"],
+            ["get", "NOM"],
+          ],
+          "text-font": ["IBM Plex Mono Regular", "Open Sans Regular"],
+          "text-size": 10,
+          "text-letter-spacing": 0.08,
+          "text-transform": "uppercase",
+          "text-allow-overlap": false,
+          "text-padding": 4,
+        },
+        paint: {
+          "text-color": "#1d1a16",
+          "text-opacity": 0.55,
+          "text-halo-color": "#fbf9f3",
+          "text-halo-width": 1.5,
+        },
+      });
     } catch (err) {
       console.warn("Could not load comarques GeoJSON:", err);
     }
+
+    // Network anchor nodes
+    map.addSource("networks", { type: "geojson", data: networkNodesGeo });
+    map.addLayer({
+      id: "networks-halo",
+      type: "circle",
+      source: "networks",
+      paint: {
+        "circle-radius": 22,
+        "circle-color": [
+          "match",
+          ["get", "network"],
+          "miceli", "#8B5A3C",
+          "keras-buti", "#6B4EA3",
+          "#1d1a16",
+        ],
+        "circle-opacity": 0.18,
+        "circle-stroke-width": 1,
+        "circle-stroke-color": [
+          "match",
+          ["get", "network"],
+          "miceli", "#8B5A3C",
+          "keras-buti", "#6B4EA3",
+          "#1d1a16",
+        ],
+        "circle-stroke-opacity": 0.5,
+      } as any,
+    });
+    map.addLayer({
+      id: "networks-dot",
+      type: "circle",
+      source: "networks",
+      paint: {
+        "circle-radius": 6,
+        "circle-color": [
+          "match",
+          ["get", "network"],
+          "miceli", "#8B5A3C",
+          "keras-buti", "#6B4EA3",
+          "#1d1a16",
+        ],
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#1d1a16",
+      } as any,
+    });
+    map.addLayer({
+      id: "networks-label",
+      type: "symbol",
+      source: "networks",
+      layout: {
+        "text-field": ["get", "label"],
+        "text-font": ["IBM Plex Mono Regular", "Open Sans Regular"],
+        "text-size": 10,
+        "text-letter-spacing": 0.1,
+        "text-offset": [0, 1.8],
+        "text-anchor": "top",
+        "text-allow-overlap": true,
+        "text-padding": 6,
+      },
+      paint: {
+        "text-color": "#1d1a16",
+        "text-halo-color": "#fbf9f3",
+        "text-halo-width": 2,
+        "text-opacity": 0.85,
+      },
+    });
 
     // Project markers
     map.addSource("projects", { type: "geojson", data: markersGeo });
@@ -221,6 +363,29 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
       },
     });
 
+    // Project name labels — offset below marker, zoom-gated at 8+
+    map.addLayer({
+      id: "projects-label",
+      type: "symbol",
+      source: "projects",
+      minzoom: 8,
+      layout: {
+        "text-field": ["get", "name"],
+        "text-font": ["IBM Plex Mono Regular", "Open Sans Regular"],
+        "text-size": 11,
+        "text-letter-spacing": 0.04,
+        "text-offset": [0, 1.4],
+        "text-anchor": "top",
+        "text-allow-overlap": false,
+        "text-padding": 6,
+      },
+      paint: {
+        "text-color": "#1d1a16",
+        "text-halo-color": "#fbf9f3",
+        "text-halo-width": 2,
+      },
+    });
+
     // Click + hover handlers
     map.on("click", "projects-dot", (e) => {
       const f = e.features?.[0];
@@ -240,7 +405,7 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
 
   function desaturateBaseStyle(m: maplibregl.Map) {
     // Walk through the loaded style, mute color saturation on non-essential layers.
-    // Keeps land + water + place names; reduces road weight.
+    // Keeps land + water; reduces road weight.
     try {
       const layers = m.getStyle().layers ?? [];
       for (const layer of layers) {
@@ -257,6 +422,46 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
       }
     } catch {
       // Best-effort; if the style schema differs, just skip.
+    }
+  }
+
+  function hideOsmPlaceLabels(m: maplibregl.Map) {
+    // Hide OSM city/town/village/place labels — we only want comarca + our own project labels.
+    try {
+      const layers = m.getStyle().layers ?? [];
+      for (const layer of layers) {
+        if (layer.type !== "symbol") continue;
+        const id = (layer as any).id ?? "";
+        const sourceLayer: string = (layer as any)["source-layer"] ?? "";
+        const looksLikePlace =
+          /place|city|town|village|hamlet|country|state|locality|suburb|neighbourhood/i.test(id) ||
+          /place|locality/i.test(sourceLayer);
+        if (looksLikePlace) {
+          try { m.setLayoutProperty(id, "visibility" as any, "none"); } catch {}
+        }
+      }
+    } catch {
+      // Best-effort
+    }
+  }
+
+  // ===== Network filter =====
+  function setNetworkFilter(network: string | null) {
+    if (!map.getLayer("projects-dot")) return;
+    const opacityExpr: any = network
+      ? ["case", ["==", ["get", "network"], network], 1, 0.22]
+      : 1;
+    const haloOpacityExpr: any = network
+      ? ["case", ["==", ["get", "network"], network], 1, 0.22]
+      : 1;
+    map.setPaintProperty("projects-dot", "circle-opacity" as any, opacityExpr);
+    map.setPaintProperty("projects-halo", "circle-opacity" as any, haloOpacityExpr);
+    if (map.getLayer("projects-label")) {
+      map.setPaintProperty("projects-label", "text-opacity" as any,
+        network
+          ? ["case", ["==", ["get", "network"], network], 1, 0.25]
+          : 1
+      );
     }
   }
 
@@ -288,6 +493,11 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
       if (!prov || !PROVINCE_BOUNDS[prov]) return;
       chips.forEach((c) => c.classList.toggle("active", c === chip));
       fitBounds(prov);
+      if (chip.classList.contains("net-chip")) {
+        setNetworkFilter(chip.dataset.network ?? null);
+      } else {
+        setNetworkFilter(null);
+      }
     });
   });
 
@@ -301,6 +511,7 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
   host.querySelector<HTMLButtonElement>("[data-zoom-reset]")?.addEventListener("click", () => {
     chips.forEach((c) => c.classList.toggle("active", c.dataset.prov === "catalunya"));
     fitBounds("catalunya");
+    setNetworkFilter(null);
   });
 
   // ===== POPOVER BEHAVIOR =====
@@ -394,6 +605,21 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
 .prov-chip:hover { background: var(--ivory); }
 .prov-chip.active {
   background: var(--ink);
+  color: var(--paper);
+}
+.strip-divider {
+  display: inline-block;
+  width: 1px;
+  background: var(--ink);
+  align-self: stretch;
+  margin: 0 0.05rem;
+}
+.prov-chip.net-chip[data-network="miceli"].active {
+  background: #8B5A3C;
+  color: var(--paper);
+}
+.prov-chip.net-chip[data-network="keras-buti"].active {
+  background: #6B4EA3;
   color: var(--paper);
 }
 
