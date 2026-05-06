@@ -1,0 +1,99 @@
+---
+// src/components/Nav.astro
+interface Props {
+  current?: "home" | "cohorts" | "actors" | "indicators" | "about";
+}
+const { current = "home" } = Astro.props;
+const items = [
+  { id: "cohorts", label: "Cohorts", href: "/cohorts/regenerant-catalunya/" },
+  { id: "actors", label: "Actors", href: "/actors/" },
+  { id: "indicators", label: "Indicators", href: "/indicators/" },
+  { id: "about", label: "About", href: "/about/" },
+] as const;
+---
+
+<header class="site-nav">
+  <a href="/" class="brand" aria-label="Bioregional Intelligence — home">
+    <span class="brand-mark">BI</span>
+    <span class="brand-text">Bioregional Intelligence</span>
+    <span class="brand-locale">Catalunya</span>
+  </a>
+  <nav aria-label="Primary">
+    <ul>
+      {items.map((it) => (
+        <li>
+          <a href={it.href} class:list={[{ active: current === it.id }]}>
+            {it.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</header>
+
+<style>
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+.brand-mark {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: -0.03em;
+}
+.brand-text {
+  font-family: var(--serif);
+  font-weight: 500;
+}
+.brand-locale {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--rule);
+  border-left: 1px solid var(--rule);
+  padding-left: 0.5rem;
+}
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+nav a {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rule);
+  text-decoration: none;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid transparent;
+}
+nav a.active,
+nav a:hover {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+@media (max-width: 640px) {
+  .brand-text { display: none; }
+  nav ul { gap: 1rem; }
+  nav a { font-size: 0.7rem; }
+}
+</style>

@@ -1,0 +1,38 @@
+---
+// src/components/Layout.astro
+import Nav from "./Nav.astro";
+import Footer from "./Footer.astro";
+import "../styles/tokens.css";
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+  current?: "home" | "cohorts" | "actors" | "indicators" | "about";
+}
+const {
+  title,
+  description = "Bioregional Intelligence dashboard for Catalunya — actor maps, cohort showcases, indicator tracking.",
+  current,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content={description} />
+  <title>{title} · Bioregional Intelligence — Catalunya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <Nav current={current} />
+  <main>
+    <slot />
+  </main>
+  <Footer />
+</body>
+</html>
