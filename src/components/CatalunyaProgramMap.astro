@@ -28,7 +28,7 @@ const markerFeatures = projects.map((p) => ({
 }));
 const markersGeoJson = { type: "FeatureCollection" as const, features: markerFeatures };
 
-// Comarques (NOMCOMAR field in the GeoJSON) that contain a confirmed project.
+// Comarques (nom_comar field in the GeoJSON — schema: cap_comar, comarca, nom_comar) that contain a confirmed project.
 const PROJECT_COMARQUES = new Set([
   "Garrotxa",
   "Anoia",
@@ -197,8 +197,8 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
           "fill-color": "#8B5A3C",
           "fill-opacity": [
             "case",
-            ["in", ["get", "NOMCOMAR"], ["literal", projectComarquesArr]],
-            0.06,
+            ["in", ["get", "nom_comar"], ["literal", projectComarquesArr]],
+            0.14,
             0.0,
           ],
         } as any,
@@ -214,20 +214,16 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
           "line-opacity": 0.55,
         },
       });
-      // Comarca name labels — subtle, mono caps, only at zoom ≥ 8.5
+      // Comarca name labels — subtle, mono caps. Show all at zoom ≥ 8; project-bearing
+      // comarques get a more visible label that's already visible at Catalunya zoom (≥ 7).
       map.addLayer({
         id: "comarques-label",
         type: "symbol",
         source: "comarques",
-        minzoom: 8.5,
+        minzoom: 8,
         layout: {
-          "text-field": [
-            "coalesce",
-            ["get", "NOMCOMAR"],
-            ["get", "name"],
-            ["get", "NOM"],
-          ],
-          "text-font": ["IBM Plex Mono Regular", "Open Sans Regular"],
+          "text-field": ["get", "nom_comar"],
+          "text-font": ["Noto Sans Regular", "Open Sans Regular"],
           "text-size": 10,
           "text-letter-spacing": 0.08,
           "text-transform": "uppercase",
@@ -236,9 +232,33 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
         },
         paint: {
           "text-color": "#1d1a16",
-          "text-opacity": 0.55,
+          "text-opacity": 0.6,
           "text-halo-color": "#fbf9f3",
           "text-halo-width": 1.5,
+        },
+      });
+      // Project-bearing comarques: name visible from the default Catalunya overview zoom.
+      map.addLayer({
+        id: "comarques-label-project",
+        type: "symbol",
+        source: "comarques",
+        filter: ["in", ["get", "nom_comar"], ["literal", projectComarquesArr]] as any,
+        minzoom: 6.5,
+        maxzoom: 8,
+        layout: {
+          "text-field": ["get", "nom_comar"],
+          "text-font": ["Noto Sans Regular", "Open Sans Regular"],
+          "text-size": 10,
+          "text-letter-spacing": 0.1,
+          "text-transform": "uppercase",
+          "text-allow-overlap": false,
+          "text-padding": 6,
+        },
+        paint: {
+          "text-color": "#1d1a16",
+          "text-opacity": 0.7,
+          "text-halo-color": "#fbf9f3",
+          "text-halo-width": 2,
         },
       });
     } catch (err) {
