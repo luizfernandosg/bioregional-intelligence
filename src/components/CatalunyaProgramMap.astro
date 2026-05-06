@@ -1,7 +1,8 @@
 ---
 // src/components/CatalunyaProgramMap.astro
-// Article-view interactive program map. Bigger than CatalunyaInsetMap; clicking a
-// marker pops up the project's card inside the map host.
+// Article-view interactive program map. Zoomable + navigable: pan/wheel/pinch,
+// floating zoom controls, province quick-zoom chips, sub-zoom click-shortcut,
+// click-marker-for-popover.
 import type { Project, NetworkMeta } from "../content.config";
 import { initialTileDataUrl } from "../lib/initial-tile";
 
@@ -28,18 +29,37 @@ const cardImage = (p: Project): string => {
 ---
 
 <div class="program-map" data-program-map data-geo-url={geoUrl}>
-  <svg viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid meet" aria-label="Regenerant Catalunya — interactive program map">
-    <g class="comarques"></g>
-    <g class="markers"></g>
-    <g class="subzoom" transform="translate(1140 720)">
+  <div class="map-controls" aria-label="Map navigation">
+    <div class="province-strip" role="tablist">
+      <button class="prov-chip active" data-prov="catalunya" type="button">Catalunya</button>
+      <button class="prov-chip" data-prov="barcelona" type="button">Barcelona</button>
+      <button class="prov-chip" data-prov="tarragona" type="button">Tarragona</button>
+      <button class="prov-chip" data-prov="lleida" type="button">Lleida</button>
+      <button class="prov-chip" data-prov="girona" type="button">Girona</button>
+    </div>
+    <p class="map-hint">Click a marker · Scroll to zoom · Drag to pan</p>
+  </div>
+
+  <svg viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid meet" aria-label="Regenerant Catalunya — interactive program map" tabindex="0">
+    <g class="zoom-root">
+      <g class="comarques"></g>
+      <g class="markers"></g>
+    </g>
+    <!-- Sub-zoom callout sits OUTSIDE the zoom-root so it stays fixed in the corner. -->
+    <g class="subzoom" transform="translate(1140 720)" data-subzoom-shortcut role="button" tabindex="0" aria-label="Zoom into L'Hospitalet metro">
       <rect class="subzoom-frame" x="0" y="0" width="240" height="160"/>
       <text class="subzoom-label" x="8" y="16">L'Hospitalet · Baix Llobregat</text>
+      <text class="subzoom-cta" x="232" y="16" text-anchor="end">↗</text>
       <g class="subzoom-comarques"></g>
       <g class="subzoom-markers"></g>
     </g>
   </svg>
 
-  <p class="map-hint">Click a marker to open the project</p>
+  <div class="zoom-buttons" aria-label="Zoom controls">
+    <button class="zoom-btn" data-zoom-in type="button" aria-label="Zoom in">+</button>
+    <button class="zoom-btn" data-zoom-out type="button" aria-label="Zoom out">−</button>
+    <button class="zoom-btn" data-zoom-reset type="button" aria-label="Fit Catalunya">↺</button>
+  </div>
 
   <!-- Pre-rendered popover cards (hidden by default; revealed on marker click). -->
   <div class="popover-stack" aria-live="polite">
@@ -95,6 +115,26 @@ const ACCENT_FILL: Record<string, string> = {
   "keras-buti": "#6B4EA3",
 };
 
+// Province bounding boxes (lng/lat) — used for click-to-zoom navigation.
+type BBox = [number, number, number, number];
+const PROVINCE_BBOX: Record<string, BBox> = {
+  catalunya: [0.15, 40.52, 3.32, 42.86],
+  barcelona: [1.45, 41.16, 2.85, 42.05],
+  tarragona: [0.10, 40.52, 1.65, 41.45],
+  lleida:    [0.55, 41.30, 1.85, 42.86],
+  girona:    [1.85, 41.60, 3.32, 42.55],
+};
+// L'Hospitalet metro click-shortcut bbox (smaller, tight on the metro area).
+const LHOSPITALET_BBOX: BBox = [1.95, 41.30, 2.25, 41.42];
+
+const VIEW_W = 1400;
+const VIEW_H = 900;
+const SCALE_MIN = 1;
+const SCALE_MAX = 8;
+
+const prefersReducedMotion = () =>
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (host) => {
   const payloadEl = host.querySelector<HTMLScriptElement>('[data-payload]');
   if (!payloadEl) return;
@@ -104,18 +144,23 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
   const geoResp = await fetch(geoUrl);
   const geo = await geoResp.json();
 
-  const svg = d3.select(host).select("svg");
+  const svgEl = host.querySelector<SVGSVGElement>("svg");
+  if (!svgEl) return;
+  const svg = d3.select(svgEl);
+  const zoomRoot = svg.select<SVGGElement>("g.zoom-root");
+
   const projection = makeProjection(CATALUNYA_DEFAULT);
   const path = d3.geoPath(projection);
 
-  // Main map comarques
-  svg.select<SVGGElement>("g.comarques")
+  // Comarques (inside zoom-root → pan/zoom transforms apply)
+  zoomRoot.select<SVGGElement>("g.comarques")
     .selectAll("path")
-    .data(geo.features)
+    .data(geo.features as any[])
     .join("path")
     .attr("d", (d) => path(d as any) ?? "")
     .attr("class", "comarca");
 
+  // Main-map markers — exclude L'Hospitalet metro markers, those live in the sub-zoom.
   const isLHospitalet = (m: Marker) =>
     m.locality.toLowerCase().includes("l'hospitalet");
   const placedMain = placeMarkers(
@@ -123,11 +168,9 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
     projection,
   );
   const lhospitaletMarkers = markers.filter(isLHospitalet);
+  drawMarkers(zoomRoot.select<SVGGElement>("g.markers"), placedMain, 11);
 
-  // No cluster pseudo-marker on this view — the sub-zoom alone shows the L'H markers.
-  // (Avoids confusion: clicking a cluster marker had no clear "which project" mapping.)
-  drawMarkers(svg.select<SVGGElement>("g.markers"), placedMain, 10);
-
+  // Sub-zoom (outside zoom-root; stays fixed)
   const subProjection = makeProjection(LHOSPITALET_SUBZOOM);
   const subPath = d3.geoPath(subProjection);
   const subFeatures = (geo.features as any[]).filter((f) => {
@@ -140,7 +183,6 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
     .join("path")
     .attr("d", (d) => subPath(d as any) ?? "")
     .attr("class", "subzoom-comarca");
-
   const placedSub = placeMarkers(lhospitaletMarkers, subProjection);
   drawMarkers(svg.select<SVGGElement>("g.subzoom-markers"), placedSub, 6);
 
@@ -157,6 +199,7 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
           .attr("role", "button")
           .attr("aria-label", (d: any) => `${d.name} — ${d.locality}`);
         node.append("circle")
+          .attr("class", "marker-dot")
           .attr("r", radius)
           .attr("fill", (d: any) => ACCENT_FILL[d.network] ?? "#1d1a16")
           .attr("stroke", "#1d1a16")
@@ -166,7 +209,99 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
       });
   }
 
-  // Popover behavior: click marker → reveal matching popover card; click outside / Esc → close.
+  // ===== ZOOM SETUP =====
+  const zoom = d3.zoom<SVGSVGElement, unknown>()
+    .scaleExtent([SCALE_MIN, SCALE_MAX])
+    .filter((event) => {
+      // Allow wheel zoom + drag pan + touch. Block when interacting with markers
+      // (so a click on a marker fires the popover, not a pan-start).
+      const target = event.target as Element;
+      if (target.closest("g.marker")) return false;
+      if (target.closest("g.subzoom")) return false;
+      if (event.type === "dblclick") return false;
+      return !event.button;
+    })
+    .on("zoom", (event) => {
+      const t = event.transform;
+      zoomRoot.attr("transform", `${t}`);
+      // Counter-scale markers so they stay visually consistent
+      const inv = 1 / t.k;
+      zoomRoot.selectAll<SVGGElement, any>("g.marker").each(function (this: SVGGElement, d: any) {
+        const x = d?.x ?? 0;
+        const y = d?.y ?? 0;
+        d3.select(this).attr("transform", `translate(${x},${y}) scale(${inv})`);
+      });
+      zoomRoot.selectAll<SVGCircleElement, unknown>(".marker-dot")
+        .attr("stroke-width", 2 * inv);
+      zoomRoot.selectAll<SVGPathElement, unknown>(".comarca")
+        .attr("stroke-width", 0.5 * inv);
+    });
+
+  svg.call(zoom);
+  // Disable d3-zoom's double-click-to-zoom (we use buttons instead).
+  svg.on("dblclick.zoom", null);
+
+  function animateToBBox(bbox: BBox, padding = 80) {
+    const [w, s, e, n] = bbox;
+    const tl = projection([w, n]);
+    const br = projection([e, s]);
+    if (!tl || !br) return;
+    const dx = Math.abs(br[0] - tl[0]);
+    const dy = Math.abs(br[1] - tl[1]);
+    if (dx === 0 || dy === 0) return;
+    const k = Math.min(
+      SCALE_MAX,
+      Math.max(SCALE_MIN, Math.min((VIEW_W - 2 * padding) / dx, (VIEW_H - 2 * padding) / dy)),
+    );
+    const cx = (tl[0] + br[0]) / 2;
+    const cy = (tl[1] + br[1]) / 2;
+    const transform = d3.zoomIdentity
+      .translate(VIEW_W / 2 - k * cx, VIEW_H / 2 - k * cy)
+      .scale(k);
+    svg.transition()
+      .duration(prefersReducedMotion() ? 0 : 600)
+      .ease(d3.easeCubicInOut)
+      .call(zoom.transform as any, transform);
+  }
+
+  function zoomBy(factor: number) {
+    svg.transition()
+      .duration(prefersReducedMotion() ? 0 : 220)
+      .ease(d3.easeCubicOut)
+      .call(zoom.scaleBy as any, factor);
+  }
+
+  // Zoom button handlers
+  host.querySelector<HTMLButtonElement>("[data-zoom-in]")?.addEventListener("click", () => zoomBy(1.6));
+  host.querySelector<HTMLButtonElement>("[data-zoom-out]")?.addEventListener("click", () => zoomBy(1 / 1.6));
+  host.querySelector<HTMLButtonElement>("[data-zoom-reset]")?.addEventListener("click", () => animateToBBox(PROVINCE_BBOX.catalunya));
+
+  // Province chip handlers
+  const chips = host.querySelectorAll<HTMLButtonElement>(".prov-chip");
+  chips.forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const prov = chip.dataset.prov;
+      if (!prov || !PROVINCE_BBOX[prov]) return;
+      chips.forEach((c) => c.classList.toggle("active", c === chip));
+      animateToBBox(PROVINCE_BBOX[prov]);
+    });
+  });
+
+  // L'Hospitalet sub-zoom shortcut
+  const subzoomEl = svg.select("g[data-subzoom-shortcut]");
+  const subzoomActivate = () => {
+    chips.forEach((c) => c.classList.toggle("active", c.dataset.prov === "barcelona"));
+    animateToBBox(LHOSPITALET_BBOX, 40);
+  };
+  subzoomEl.on("click", subzoomActivate);
+  subzoomEl.on("keydown", (event: KeyboardEvent) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      subzoomActivate();
+    }
+  });
+
+  // ===== POPOVER BEHAVIOR =====
   const popovers = host.querySelectorAll<HTMLElement>("[data-popover-id]");
   const allMarkerNodes = svg.selectAll<SVGGElement, unknown>("g.marker");
   const hint = host.querySelector<HTMLElement>(".map-hint");
@@ -202,14 +337,17 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
     });
   });
 
-  // Close handlers
   popovers.forEach((p) => {
     const closeBtn = p.querySelector<HTMLButtonElement>(".popover-close");
     closeBtn?.addEventListener("click", () => closePopovers());
   });
   host.addEventListener("click", (event) => {
     const target = event.target as HTMLElement;
-    if (target.closest("[data-popover-id]") || target.closest("g.marker")) return;
+    if (target.closest("[data-popover-id]")) return;
+    if (target.closest("g.marker")) return;
+    if (target.closest(".prov-chip")) return;
+    if (target.closest(".zoom-btn")) return;
+    if (target.closest("g[data-subzoom-shortcut]")) return;
     closePopovers();
   });
   document.addEventListener("keydown", (event) => {
@@ -224,33 +362,116 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
   width: 100%;
   height: clamp(520px, 78vh, 880px);
   background: var(--ivory);
-  border: 1px solid var(--ink);
+  border: 2px solid var(--ink);
   overflow: hidden;
 }
 .program-map svg {
   width: 100%;
   height: 100%;
   display: block;
+  touch-action: none; /* let D3 zoom handle pinch */
 }
+.program-map svg:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; }
 
-.map-hint {
+.map-controls {
   position: absolute;
   top: 1rem;
   left: 1rem;
-  margin: 0;
-  padding: 0.4rem 0.7rem;
+  right: 1rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  pointer-events: none;
+  z-index: 2;
+}
+.province-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  pointer-events: auto;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+}
+.prov-chip {
   font-family: var(--mono);
   font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  background: var(--paper);
+  border: 0;
+  border-right: 1px solid var(--ink);
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.prov-chip:last-child { border-right: 0; }
+.prov-chip:hover { background: var(--ivory); }
+.prov-chip.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.map-hint {
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--rule);
   background: var(--paper);
   border: 1px solid var(--rule);
   pointer-events: none;
+  white-space: nowrap;
   transition: opacity var(--t-fast);
 }
 
-:global(.program-map .comarca),
+.zoom-buttons {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  z-index: 2;
+}
+.zoom-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  line-height: 1;
+  background: var(--paper);
+  color: var(--ink);
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.zoom-btn:last-child { border-bottom: 0; }
+.zoom-btn:hover, .zoom-btn:focus-visible {
+  background: var(--ink);
+  color: var(--paper);
+  outline: none;
+}
+
+:global(.program-map .comarca) {
+  fill: rgba(0, 0, 0, 0.03);
+  stroke: var(--ink);
+  stroke-width: 0.5;
+  stroke-dasharray: 1 2;
+  transition: fill var(--t-fast);
+}
+:global(.program-map .comarca:hover) {
+  fill: rgba(0, 0, 0, 0.08);
+}
 :global(.program-map .subzoom-comarca) {
   fill: rgba(0, 0, 0, 0.03);
   stroke: var(--ink);
@@ -259,19 +480,25 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
 }
 :global(.program-map .marker) {
   cursor: pointer;
-  transition: transform var(--t-fast);
+  transition: opacity var(--t-fast);
   transform-box: fill-box;
-  transform-origin: center;
 }
-:global(.program-map .marker:hover circle),
-:global(.program-map .marker:focus-visible circle),
-:global(.program-map .marker.active circle) {
+:global(.program-map .marker .marker-dot) {
+  transition: r var(--t-med), stroke-width var(--t-fast);
+}
+:global(.program-map .marker:hover .marker-dot),
+:global(.program-map .marker:focus-visible .marker-dot) {
   stroke-width: 3;
 }
-:global(.program-map .marker.active circle) {
-  filter: drop-shadow(0 0 0 var(--ink));
-  r: 14;
+:global(.program-map .marker.active .marker-dot) {
+  stroke-width: 3;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.18));
 }
+:global(.program-map .marker:focus-visible) { outline: none; }
+
+:global(.program-map .subzoom) { cursor: pointer; transition: filter var(--t-fast); }
+:global(.program-map .subzoom:hover .subzoom-frame) { fill: var(--ivory); }
+:global(.program-map .subzoom:focus-visible .subzoom-frame) { stroke-width: 2; outline: none; }
 :global(.program-map .subzoom-frame) {
   fill: var(--paper);
   stroke: var(--ink);
@@ -284,13 +511,19 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
   letter-spacing: 0.08em;
   fill: var(--rule);
 }
+:global(.program-map .subzoom-cta) {
+  font-family: var(--mono);
+  font-size: 11px;
+  fill: var(--ink);
+}
 
 .popover-stack {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  width: min(360px, calc(100% - 3rem));
+  top: 4.5rem;
+  right: 1rem;
+  width: min(360px, calc(100% - 2rem));
   pointer-events: none;
+  z-index: 3;
 }
 .popover-card {
   pointer-events: auto;
@@ -414,6 +647,10 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
 }
 .popover-card .ext-link:hover { color: var(--rust); border-bottom-color: var(--rust); }
 
+@media (max-width: 880px) {
+  .map-controls { flex-direction: column; align-items: flex-start; }
+  .map-hint { display: none; }
+}
 @media (max-width: 720px) {
   .popover-stack {
     top: auto;
@@ -423,6 +660,5 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach(async (h
     width: auto;
   }
   .popover-card { box-shadow: 4px 4px 0 var(--ink); }
-  .map-hint { font-size: 0.65rem; }
 }
 </style>
