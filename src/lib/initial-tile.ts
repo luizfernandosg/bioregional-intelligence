@@ -3,8 +3,8 @@
 // a paper background, the project's initial in display serif, with the network's accent stripe at the bottom.
 
 const ACCENT_HEX: Record<string, string> = {
-  forest: "#5a7a47",
-  rust: "#a05a2c",
+  forest: "#8B5A3C",
+  rust: "#6B4EA3",
   purple: "#6b4a85",
   orange: "#d27a3a",
   blue: "#4a6b85",

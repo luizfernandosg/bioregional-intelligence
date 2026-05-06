@@ -1,12 +1,11 @@
 ---
 // src/pages/programs/regenerant-catalunya/article.astro
-// Article-companion view of the Regenerant Catalunya program — themed to feel
-// native to the Regenerant Catalunya site (regenerant.refibcn.cat). Strips the
-// BIS dashboard chrome (top nav, footer) so it embeds cleanly into / sits next
-// to the GG24 retrospective article.
+// Article-companion view of the Regenerant Catalunya program. Same chrome and
+// editorial aesthetic as the dashboard view, but the map is the centerpiece —
+// full-width, taller, and clicking a marker pops up the project card inline.
 import Layout from "../../../components/Layout.astro";
 import NetworkSection from "../../../components/NetworkSection.astro";
-import CatalunyaInsetMap from "../../../components/CatalunyaInsetMap.astro";
+import CatalunyaProgramMap from "../../../components/CatalunyaProgramMap.astro";
 import { getCollection } from "astro:content";
 
 const entries = await getCollection("cohort");
@@ -18,374 +17,168 @@ const totalMatching = doc.networks.miceli.contribution_eur + doc.networks["keras
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
-<Layout title="Regenerant Catalunya · Program (article view)" minimal>
-  <div class="rc-themed">
-    <header class="article-topbar">
-      <div class="topbar-inner">
-        <a class="topbar-brand" href="https://regenerant.refibcn.cat/">
-          <span class="topbar-mark">Regenerant Catalunya</span>
-        </a>
-        <a class="topbar-cta" href={`${base}/programs/regenerant-catalunya/`}>
-          ↗ Open in BIS dashboard
-        </a>
-      </div>
-    </header>
+<Layout title="Regenerant Catalunya · Article view" current="programs" dataset="Regenerant Catalunya">
+  <section class="hero">
+    <p class="eyebrow">Program · 2025–2026 · GG24 · article companion</p>
+    <h1>Regenerant Catalunya</h1>
+    <p class="lede">
+      11 projects · 2 networks · {fmt.format(totalMatching)} matching pool · funded through Gitcoin Grants Round 24.
+    </p>
+    <p class="prose">
+      Regenerant Catalunya unites a diverse cohort of regenerative initiatives across Catalonia under one
+      funding umbrella. Projects were scouted by two trusted local networks — <strong>Miceli Social</strong>
+      (rural) and <strong>La Fundició / Keras Buti</strong> (urban) — and back a broad definition of regeneration
+      that spans ecological restoration, community projects, and civic innovation.
+    </p>
+    <div class="cta-row">
+      <a href="https://regenerant-catalunya.refibcn.cat">↗ Regenerant Catalunya site</a>
+      <a href="https://refibcn.cat">↗ ReFi Barcelona</a>
+      <a href={`${base}/programs/regenerant-catalunya/`} class="ghost">↗ BIS dashboard view</a>
+    </div>
+  </section>
 
-    <article class="article-shell">
-      <header class="article-hero">
-        <p class="eyebrow">Cohort · 2025–2026 · GG24 · Local Funding Program</p>
-        <h1>Regenerant Catalunya</h1>
-        <p class="lede">
-          11 projects · 2 networks · {fmt.format(totalMatching)} matching pool
-        </p>
-        <p class="prose">
-          A diverse cohort of regenerative initiatives across Catalonia under one funding umbrella —
-          scouted by two trusted local networks: <strong class="miceli-em">Miceli Social</strong> (rural)
-          and <strong class="kerasbuti-em">La Fundició / Keras Buti</strong> (urban). Spanning ecological
-          restoration, community projects, and civic innovation.
-        </p>
-      </header>
+  <section class="map-section">
+    <div class="map-frame">
+      <CatalunyaProgramMap projects={doc.projects} networks={doc.networks} />
+    </div>
+    <div class="map-meta">
+      <article class="net-tile" data-accent="forest">
+        <p class="eyebrow">Rural network · Miceli Social</p>
+        <p>{fmt.format(doc.networks.miceli.contribution_eur)} matching pool · {miceli.length} projects · Ripoll-anchored, dispersed across rural comarques.</p>
+      </article>
+      <article class="net-tile" data-accent="rust">
+        <p class="eyebrow">Urban network · La Fundició / Keras Buti</p>
+        <p>{fmt.format(doc.networks["keras-buti"].contribution_eur)} matching pool · {kerasButi.length} projects · L'Hospitalet de Llobregat metro cluster.</p>
+      </article>
+    </div>
+  </section>
 
-      <section class="overview">
-        <div class="overview-grid">
-          <div class="map-pane">
-            <CatalunyaInsetMap projects={doc.projects} />
-          </div>
-          <div class="summary-pane">
-            <article class="net-tile" data-network="miceli">
-              <p class="eyebrow">Rural network</p>
-              <h2>{doc.networks.miceli.name}</h2>
-              <p>{doc.networks.miceli.summary}</p>
-              <p class="meta">{fmt.format(doc.networks.miceli.contribution_eur)} · {miceli.length} projects</p>
-            </article>
-            <article class="net-tile" data-network="keras-buti">
-              <p class="eyebrow">Urban network</p>
-              <h2>{doc.networks["keras-buti"].name}</h2>
-              <p>{doc.networks["keras-buti"].summary}</p>
-              <p class="meta">{fmt.format(doc.networks["keras-buti"].contribution_eur)} · {kerasButi.length} projects</p>
-            </article>
-          </div>
-        </div>
-      </section>
+  <NetworkSection networkId="miceli" meta={doc.networks.miceli} projects={miceli} />
+  <NetworkSection networkId="keras-buti" meta={doc.networks["keras-buti"]} projects={kerasButi} />
 
-      <NetworkSection networkId="miceli" meta={doc.networks.miceli} projects={miceli} />
-      <NetworkSection networkId="keras-buti" meta={doc.networks["keras-buti"]} projects={kerasButi} />
-
-      <footer class="article-footer">
-        <p class="eyebrow">Funders</p>
-        <ul class="funders">
-          {doc.funders.map((f) => (
-            <li><a href={f.web}>{f.name}</a> · <span>{f.role}</span></li>
-          ))}
-        </ul>
-        <p class="back-link">
-          ↗ <a href={`${base}/programs/regenerant-catalunya/`}>Open in the Bioregional Intelligence System dashboard</a>
-        </p>
-      </footer>
-    </article>
-  </div>
+  <section class="cohort-footer">
+    <div class="pending">
+      <p class="eyebrow">Pending cohort · TBC</p>
+      <ul>
+        {doc.pending.map((p) => <li>{p.name}</li>)}
+      </ul>
+    </div>
+    <div class="funders">
+      <p class="eyebrow">Funders</p>
+      <ul>
+        {doc.funders.map((f) => (
+          <li><a href={f.web}>{f.name}</a> · <span>{f.role}</span></li>
+        ))}
+      </ul>
+    </div>
+  </section>
 </Layout>
 
-<style is:global>
-/* RC-theme overrides scoped to the article view via the .rc-themed wrapper.
-   These re-skin the shared components (NetworkSection, ProjectCard,
-   CatalunyaInsetMap) when they render inside this view, without affecting
-   the dashboard view at /programs/regenerant-catalunya/. */
-.rc-themed {
-  --ink: #214033;          /* forest green */
-  --paper: #E6DFD7;        /* warm sand */
-  --ivory: #DDD3C9;        /* slightly darker sand */
-  --rule: #214033;
-  --rule-soft: rgba(33, 64, 51, 0.5);
-  --forest: #8B5A3C;       /* miceli terracotta */
-  --rust: #6B4EA3;         /* keras buti = activist purple */
-  --link: #3A6655;
-  --link-hover: #568F79;
-  --orange: #E67E50;
-  --serif: "Inter", system-ui, -apple-system, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --sans: "Inter", system-ui, -apple-system, sans-serif;
-  --t-fast: 200ms ease;
-  --t-med: 280ms ease;
-  --t-slow: 600ms cubic-bezier(0.4, 0, 0.2, 1);
+<style>
+.hero {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 4rem 2rem 2rem;
 }
-
-/* Global re-skin when inside .rc-themed */
-.rc-themed { background: var(--paper); color: var(--ink); }
-.rc-themed body { background: var(--paper); }
-.rc-themed h1,
-.rc-themed h2,
-.rc-themed h3,
-.rc-themed h4 {
-  font-family: "Inter", system-ui, sans-serif;
-  font-weight: 700;
-  color: var(--ink);
-}
-.rc-themed h1 { font-size: clamp(2rem, 4.5vw, 2.5rem); letter-spacing: -0.03em; }
-.rc-themed h2 { font-size: 2rem; font-weight: 600; letter-spacing: -0.02em; }
-.rc-themed h3 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; }
-.rc-themed body, .rc-themed p, .rc-themed li {
-  font-family: "Inter", system-ui, sans-serif;
-  font-size: 1.125rem;
-  line-height: 1.7;
-}
-.rc-themed .eyebrow {
+.hero h1 { margin: 0.25rem 0 0.5rem; }
+.hero .lede {
   font-family: var(--mono);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--ink);
-  opacity: 0.8;
+  color: var(--rule);
+  margin-bottom: 1.5rem;
 }
-.rc-themed a { color: var(--link); }
-.rc-themed a:hover { color: var(--link-hover); }
-
-/* Project card re-skin */
-.rc-themed article.card {
-  border: 2px solid var(--ink);
-  background: color-mix(in srgb, var(--paper) 85%, white);
-  transition: transform var(--t-fast), box-shadow var(--t-fast);
+.hero .prose {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  max-width: 50ch;
+  margin: 0 0 1rem;
 }
-.rc-themed article.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(33, 64, 51, 0.12);
-}
-.rc-themed article.card .image-wrap { border-bottom: 2px solid var(--ink); }
-.rc-themed article.card .network-chip {
-  background: var(--paper);
-  border: 1.5px solid var(--ink);
-  font-weight: 600;
-}
-.rc-themed article.card .network-chip[data-accent="forest"] { color: #8B5A3C; }
-.rc-themed article.card .network-chip[data-accent="rust"] { color: #6B4EA3; }
-.rc-themed article.card .body h3 { font-size: 1.25rem; font-family: "Inter", sans-serif; font-weight: 600; }
-.rc-themed article.card .summary { font-size: 1rem; line-height: 1.6; }
-.rc-themed article.card .meta { border-top: 1px solid var(--rule-soft); }
-.rc-themed article.card .theme-tag { font-weight: 500; color: var(--ink); opacity: 0.75; }
-
-/* Network section re-skin */
-.rc-themed section.network { border-top: 3px solid var(--ink); padding: 4rem 2rem; }
-.rc-themed section.network .network-header { max-width: 64rem; }
-.rc-themed section.network .meta-row {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--ink);
-  opacity: 0.85;
-}
-.rc-themed section.network .network-header .summary { font-size: 1.1rem; line-height: 1.65; }
-
-/* Inset map re-skin */
-.rc-themed .inset-map { border: 2px solid var(--ink); background: color-mix(in srgb, var(--paper) 92%, white); }
-.rc-themed .inset-map .comarca,
-.rc-themed .inset-map .subzoom-comarca {
-  fill: rgba(33, 64, 51, 0.04);
-  stroke: var(--ink);
-  stroke-width: 0.6;
-  stroke-dasharray: 1 2;
-}
-.rc-themed .inset-map .marker circle { stroke: var(--ink); stroke-width: 2; }
-/* Override the runtime fill for markers — recolor by network */
-.rc-themed .inset-map g.marker[data-network="miceli"] circle { fill: #8B5A3C; }
-.rc-themed .inset-map g.marker[data-network="keras-buti"] circle { fill: #6B4EA3; }
-.rc-themed .inset-map .subzoom-frame { fill: var(--paper); stroke: var(--ink); stroke-width: 1.5; }
-.rc-themed .inset-map .subzoom-label { fill: var(--ink); font-weight: 600; }
-</style>
-
-<style>
-/* Local layout for this page */
-.rc-themed {
-  background: #E6DFD7;
-  color: #214033;
-  min-height: 100vh;
-}
-
-.article-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: #E6DFD7;
-  border-bottom: 2px solid #214033;
-}
-.topbar-inner {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 0.75rem 2rem;
+.cta-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.cta-row a {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border: 1px solid var(--ink);
+  padding: 0.4rem 0.8rem;
+  color: var(--ink);
+  transition: background var(--t-fast);
+}
+.cta-row a:hover { background: var(--ink); color: var(--paper); }
+.cta-row a.ghost {
+  border-color: var(--rule);
+  color: var(--rule);
+}
+.cta-row a.ghost:hover {
+  border-color: var(--ink);
+  background: var(--ivory);
+  color: var(--ink);
+}
+
+.map-section {
+  background: var(--ivory);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 2rem;
+}
+.map-frame {
+  max-width: 100rem;
+  margin: 0 auto;
+}
+.map-meta {
+  max-width: 80rem;
+  margin: 1.5rem auto 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
-.topbar-brand {
-  font-family: "Inter", sans-serif;
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: -0.01em;
-  color: #214033;
-  text-decoration: none;
+@media (max-width: 720px) {
+  .map-meta { grid-template-columns: 1fr; }
 }
-.topbar-mark::before {
-  content: "↗ ";
-  font-weight: 400;
-  opacity: 0.7;
+.net-tile {
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
-.topbar-cta {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.8rem;
+.net-tile p { margin: 0; font-family: var(--serif); font-size: 0.95rem; }
+.net-tile .eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #214033;
-  text-decoration: none;
-  border: 1.5px solid #214033;
-  padding: 0.4rem 0.8rem;
-  background: transparent;
-  transition: background 200ms ease, color 200ms ease;
+  margin: 0;
 }
-.topbar-cta:hover {
-  background: #214033;
-  color: #E6DFD7;
+.net-tile[data-accent="forest"] .eyebrow { color: var(--forest); }
+.net-tile[data-accent="rust"] .eyebrow { color: var(--rust); }
+
+.cohort-footer {
+  padding: 3rem 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 80rem;
+  margin: 0 auto;
 }
 @media (max-width: 640px) {
-  .topbar-cta { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+  .cohort-footer { grid-template-columns: 1fr; }
 }
-
-.article-shell {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 0;
-}
-.article-hero {
-  max-width: 56rem;
-  margin: 0 auto;
-  padding: 4rem 2rem 2rem;
-}
-.article-hero .eyebrow {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #214033;
-  opacity: 0.8;
-}
-.article-hero h1 {
-  font-family: "Inter", sans-serif;
-  font-weight: 700;
-  font-size: clamp(2.5rem, 6vw, 3.5rem);
-  letter-spacing: -0.03em;
-  margin: 0.5rem 0;
-  color: #214033;
-}
-.article-hero .lede {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #214033;
-  opacity: 0.85;
-  margin: 0 0 1.5rem;
-}
-.article-hero .prose {
-  font-family: "Inter", sans-serif;
-  font-size: 1.2rem;
-  line-height: 1.7;
-  max-width: 50ch;
-  color: #214033;
-  margin: 0;
-}
-.miceli-em { color: #8B5A3C; }
-.kerasbuti-em { color: #6B4EA3; }
-
-.overview {
-  padding: 3rem 2rem;
-  background: color-mix(in srgb, #E6DFD7 90%, white);
-  border-top: 3px solid #214033;
-  border-bottom: 3px solid #214033;
-}
-.overview-grid {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 2rem;
-  max-width: 72rem;
-  margin: 0 auto;
-  align-items: stretch;
-}
-@media (max-width: 1024px) {
-  .overview-grid { grid-template-columns: 1fr; }
-}
-.summary-pane { display: flex; flex-direction: column; gap: 1rem; }
-.net-tile {
-  border: 2px solid #214033;
-  background: color-mix(in srgb, #E6DFD7 85%, white);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.net-tile h2 { margin: 0; font-size: 1.5rem; font-family: "Inter", sans-serif; font-weight: 700; }
-.net-tile[data-network="miceli"] h2 { color: #8B5A3C; }
-.net-tile[data-network="keras-buti"] h2 { color: #6B4EA3; }
-.net-tile p {
-  margin: 0;
-  font-family: "Inter", sans-serif;
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #214033;
-}
-.net-tile .meta {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #214033;
-  opacity: 0.75;
-  margin-top: 0.5rem;
-  border-top: 1.5px solid #214033;
-  padding-top: 0.5rem;
-}
-.net-tile[data-network="miceli"] { border-left: 6px solid #8B5A3C; }
-.net-tile[data-network="keras-buti"] { border-left: 6px solid #6B4EA3; }
-
-.article-footer {
-  padding: 4rem 2rem;
-  max-width: 56rem;
-  margin: 0 auto;
-  border-top: 3px solid #214033;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.article-footer .eyebrow {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #214033;
-  opacity: 0.8;
-}
-.article-footer .funders {
+.cohort-footer ul {
   list-style: none;
   padding: 0;
-  margin: 0.5rem 0 2rem;
-  font-family: "Inter", sans-serif;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.5rem;
+  margin: 0.5rem 0 0;
+  font-family: var(--serif);
 }
-.article-footer .funders li {
-  white-space: nowrap;
-  font-size: 1rem;
-  color: #214033;
-}
-.article-footer .funders a { color: #3A6655; text-decoration: none; }
-.article-footer .funders a:hover { color: #568F79; text-decoration: underline; }
-.back-link {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border-top: 2px solid #214033;
-  padding-top: 1rem;
-  margin: 1rem 0 0;
-}
-.back-link a { color: #214033; text-decoration: none; }
-.back-link a:hover { color: #3A6655; text-decoration: underline; }
+.cohort-footer li { margin-bottom: 0.4rem; }
+.cohort-footer a { color: var(--ink); }
 </style>
