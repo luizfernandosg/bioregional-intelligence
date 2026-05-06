@@ -1,0 +1,40 @@
+---
+// src/pages/actors.astro
+import Layout from "../components/Layout.astro";
+---
+
+<Layout title="Actors" current="actors">
+  <section class="placeholder">
+    <p class="eyebrow">Actors</p>
+    <h1>Catalunya's regenerative ecosystem — coming next.</h1>
+    <p class="lede">
+      The actor / network map ports here from <code>refi-bcn-os/packages/maps/catalunya-actor-map</code>
+      in the next iteration (week of 2026-05-12). Featured filter, scope-tier visual encoding, and
+      province-zoom controls land with the port.
+    </p>
+    <p>
+      In the meantime, the v0 prototype is browsable in the source repo.
+    </p>
+  </section>
+</Layout>
+
+<style>
+.placeholder {
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: 6rem 2rem;
+  text-align: left;
+}
+.placeholder code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--ivory);
+  padding: 0.1em 0.3em;
+  border: 1px solid var(--rule);
+}
+.placeholder .lede {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  color: var(--rule);
+}
+</style>

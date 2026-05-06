@@ -1,0 +1,64 @@
+---
+// src/pages/about.astro
+import Layout from "../components/Layout.astro";
+---
+
+<Layout title="About" current="about">
+  <article class="prose">
+    <p class="eyebrow">About</p>
+    <h1>Bioregional Intelligence — Catalunya</h1>
+
+    <p class="lede">
+      A static dashboard that makes Catalunya's regenerative ecosystem legible to the public.
+      Cohort showcases, actor and network maps, and bioregional-health indicators — combined into a
+      single readable surface.
+    </p>
+
+    <h2>Why</h2>
+    <p>
+      Catalunya hosts a dense, networked regenerative ecosystem — cooperatives, research institutes, rural initiatives, urban commons, finance experiments. Most of this work isn't legible from outside it. This dashboard is a public-facing layer that surfaces what's happening, who's doing it, and where it lives.
+    </p>
+
+    <h2>What's here</h2>
+    <ul>
+      <li><strong>Cohorts</strong> — public showcases of project cohorts. The first is Regenerant Catalunya, the GG24 local funding round.</li>
+      <li><strong>Actors</strong> — the ecosystem-network view (the broader actor map ported from `refi-bcn-os`). Coming next.</li>
+      <li><strong>Indicators</strong> — bioregional-health signals across Catalunya. In development.</li>
+    </ul>
+
+    <h2>Methodology</h2>
+    <p>
+      All content is YAML-canonical, hand-curated, and published openly. The data layer is auditable in the source repo. Map layers are simplified comarques GeoJSON from the Generalitat de Catalunya (ODbL).
+    </p>
+
+    <h2>License</h2>
+    <p>
+      Code: MIT. Content: CC BY-SA 4.0. Re-use freely with attribution.
+    </p>
+
+    <h2>Built by</h2>
+    <p>
+      <a href="https://refibcn.cat">ReFi Barcelona</a>, in dialogue with the broader Catalan regenerative ecosystem. Source on <a href="https://github.com/luizfernandosg/bioregional-intelligence">GitHub</a>.
+    </p>
+  </article>
+</Layout>
+
+<style>
+.prose {
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+}
+.prose .lede {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  color: var(--rule);
+}
+.prose h2 {
+  margin-top: 2rem;
+  border-top: 1px dashed var(--rule);
+  padding-top: 1rem;
+}
+.prose ul { padding-left: 1.25rem; }
+.prose li { margin-bottom: 0.5rem; }
+</style>
