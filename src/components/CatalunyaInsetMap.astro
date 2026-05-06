@@ -8,6 +8,8 @@ interface Props {
   projects: Project[];
 }
 const { projects } = Astro.props;
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, "");
+const geoUrl = `${baseUrl}/geo/catalunya-comarques.geojson`;
 // Pass project data + network attribution to the client island via a JSON script tag.
 const payload = projects.map((p) => ({
   id: p.id,
@@ -19,7 +21,7 @@ const payload = projects.map((p) => ({
 }));
 ---
 
-<div class="inset-map" data-inset-map>
+<div class="inset-map" data-inset-map data-geo-url={geoUrl}>
   <svg viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid meet" aria-label="Catalunya — RC cohort marker map">
     <g class="comarques"></g>
     <g class="markers"></g>
@@ -61,7 +63,8 @@ document.querySelectorAll<HTMLDivElement>("[data-inset-map]").forEach(async (hos
   if (!payloadEl) return;
   const markers: Marker[] = JSON.parse(payloadEl.textContent ?? "[]");
 
-  const geoResp = await fetch("/geo/catalunya-comarques.geojson");
+  const geoUrl = host.dataset.geoUrl ?? "/geo/catalunya-comarques.geojson";
+  const geoResp = await fetch(geoUrl);
   const geo = await geoResp.json();
 
   const svg = d3.select(host).select("svg");

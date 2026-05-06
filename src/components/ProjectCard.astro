@@ -8,12 +8,13 @@ interface Props {
   networkMeta: NetworkMeta;
 }
 const { project, networkMeta } = Astro.props;
-const image =
-  project.image ??
-  initialTileDataUrl({
-    initial: project.name.charAt(0),
-    accent: networkMeta.accent,
-  });
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, "");
+const image = project.image
+  ? `${baseUrl}${project.image}`
+  : initialTileDataUrl({
+      initial: project.name.charAt(0),
+      accent: networkMeta.accent,
+    });
 const themeLabel = project.theme.replace(/-/g, " ");
 ---
 
