@@ -27,7 +27,7 @@ npm run preview      # preview the production build
 - `src/pages/` — routes
 - `src/lib/` — TypeScript helpers (projection, initial-tile generation)
 - `public/` — static assets (GeoJSON, project images)
-- `docs/` — north-star, article-embed-guide, sources
+- `docs/` — north-star, article-embed-guide, sources, contributor-onboarding, feedback
 
 ## License
 
@@ -36,4 +36,9 @@ npm run preview      # preview the production build
 
 ## Contributing
 
-This is part of the [ReFi Barcelona](https://refibcn.cat) ecosystem. Contributions welcome — open an issue or PR.
+This is part of the [ReFi Barcelona](https://refibcn.cat) ecosystem. Two ways in:
+
+- **Want to develop directly?** → [`docs/CONTRIBUTOR-ONBOARDING.md`](./docs/CONTRIBUTOR-ONBOARDING.md) — one-pager: setup in ~10 min, common-edit recipes, deploy flow.
+- **Just want to leave feedback / corrections / directions?** → [`docs/FEEDBACK.md`](./docs/FEEDBACK.md) — drop entries; Luiz processes the queue (and may spawn agents to act on them) without you needing to operate any agents/code yourself.
+
+Or open an issue / PR on GitHub.
