@@ -63,7 +63,13 @@ const cardImage = (p: Project): string => {
 };
 ---
 
-<div class="program-map" data-program-map data-geo-url={geoUrl}>
+<div
+  class="program-map"
+  data-program-map
+  data-geo-url={geoUrl}
+  data-vector-style-url="https://tiles.openfreemap.org/styles/positron"
+  data-raster-style-url={`${baseUrl}/map-styles/osm-raster.json`}
+>
   <div class="map-controls" aria-label="Map navigation">
     <div class="province-strip" role="tablist">
       <button class="prov-chip active" data-prov="catalunya" type="button">Catalunya</button>
@@ -122,10 +128,37 @@ const cardImage = (p: Project): string => {
 <script>
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+// Vite + Astro `base` subpath: ensure the worker is loaded from a hashed URL under `_astro/`, not a wrong relative path.
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-csp-worker.js?url";
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
 
-// Tile source — free, no API key, OSM-based, MapLibre-compatible.
-// Swap to a Protomaps PMTiles or MapTiler URL later if we want self-hosted / branded styling.
-const TILE_STYLE = "https://tiles.openfreemap.org/styles/positron";
+const DEFAULT_VECTOR_STYLE = "https://tiles.openfreemap.org/styles/positron";
+
+/** Resolve to absolute URL so MapLibre always fetches the style from the right origin (GitHub Pages base, preview, etc.). */
+function toAbsoluteStyleUrl(pathOrUrl: string): string {
+  if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) return pathOrUrl;
+  return new URL(pathOrUrl, window.location.origin).href;
+}
+
+/**
+ * Prefer OpenFreeMap vector tiles; if the style request fails (CORS, firewall, offline), use vendored OSM raster JSON.
+ * Raster style must include `glyphs` — symbol layers (comarca / project labels) fail silently or break the stack otherwise.
+ */
+async function resolveBasemapStyleUrl(host: HTMLElement): Promise<string> {
+  const vectorUrl = host.dataset.vectorStyleUrl ?? DEFAULT_VECTOR_STYLE;
+  const rasterRelative = host.dataset.rasterStyleUrl ?? "/map-styles/osm-raster.json";
+  const rasterUrl = toAbsoluteStyleUrl(rasterRelative);
+  try {
+    const ac = new AbortController();
+    const t = window.setTimeout(() => ac.abort(), 8000);
+    const res = await fetch(vectorUrl, { method: "HEAD", signal: ac.signal });
+    window.clearTimeout(t);
+    if (res.ok) return vectorUrl;
+  } catch {
+    /* network, CORS, timeout — use local raster JSON + OSM tiles */
+  }
+  return rasterUrl;
+}
 
 // Catalunya bounds (SW [lng, lat], NE [lng, lat]) — pan + zoom can't escape this box.
 const CATALUNYA_BOUNDS: [[number, number], [number, number]] = [
@@ -158,24 +191,25 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
   const markersGeo = JSON.parse(markersEl.textContent ?? '{"type":"FeatureCollection","features":[]}');
   const networkNodesGeo = JSON.parse(networkNodesEl?.textContent ?? '{"type":"FeatureCollection","features":[]}');
 
-  const map = new maplibregl.Map({
-    container: mapHost,
-    style: TILE_STYLE,
-    center: [1.7, 41.85],
-    zoom: 7.4,
-    minZoom: 6,
-    maxZoom: 14,
-    maxBounds: CATALUNYA_BOUNDS,
-    attributionControl: { compact: true },
-    cooperativeGestures: false,
-    dragRotate: false,
-    pitchWithRotate: false,
-    touchZoomRotate: true,
-  });
-  // Disable rotation entirely — keeps the map oriented with north up.
-  map.touchZoomRotate.disableRotation();
+  void resolveBasemapStyleUrl(host).then((styleUrl) => {
+    const map = new maplibregl.Map({
+      container: mapHost,
+      style: toAbsoluteStyleUrl(styleUrl),
+      center: [1.7, 41.85],
+      zoom: 7.4,
+      minZoom: 6,
+      maxZoom: 14,
+      maxBounds: CATALUNYA_BOUNDS,
+      attributionControl: { compact: true },
+      cooperativeGestures: false,
+      dragRotate: false,
+      pitchWithRotate: false,
+      touchZoomRotate: true,
+    });
+    // Disable rotation entirely — keeps the map oriented with north up.
+    map.touchZoomRotate.disableRotation();
 
-  map.on("load", async () => {
+    map.on("load", async () => {
     // Subtle palette tweaks on top of the positron base — push it toward our paper-and-ink feel.
     desaturateBaseStyle(map);
     // Hide OSM city/town/village/place labels — keep only our own labels.
@@ -315,7 +349,7 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
       source: "networks",
       layout: {
         "text-field": ["get", "label"],
-        "text-font": ["IBM Plex Mono Regular", "Open Sans Regular"],
+        "text-font": ["Noto Sans Regular", "Open Sans Regular"],
         "text-size": 10,
         "text-letter-spacing": 0.1,
         "text-offset": [0, 1.8],
@@ -391,7 +425,7 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
       minzoom: 8,
       layout: {
         "text-field": ["get", "name"],
-        "text-font": ["IBM Plex Mono Regular", "Open Sans Regular"],
+        "text-font": ["Noto Sans Regular", "Open Sans Regular"],
         "text-size": 11,
         "text-letter-spacing": 0.04,
         "text-offset": [0, 1.4],
@@ -559,6 +593,7 @@ document.querySelectorAll<HTMLDivElement>("[data-program-map]").forEach((host) =
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closePopovers();
   });
+  }); // end resolveBasemapStyleUrl().then
 });
 </script>
 
