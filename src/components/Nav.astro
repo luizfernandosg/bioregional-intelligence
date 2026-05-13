@@ -2,46 +2,79 @@
 // src/components/Nav.astro
 interface Props {
   current?: "home" | "programs" | "actors" | "indicators" | "about";
-  // Right-most segment of the brand line — names the dataset/view in scope.
-  // Defaults to "Catalunya" (general bioregion); program pages pass "Regenerant Catalunya".
   dataset?: string;
+  programView?: "home" | "article" | "dashboard";
 }
-const { current = "home", dataset = "Catalunya" } = Astro.props;
+const { current = "home", dataset = "Catalunya", programView } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const bisHome = `${base}/`;
+const regenerantOverview = `${base}/programs/regenerant-catalunya/`;
+const regenerantArticle = `${base}/programs/regenerant-catalunya/article/`;
+const isRegenerantProgram = dataset === "Regenerant Catalunya";
+
 const items = [
   { id: "programs", label: "Programs", href: `${base}/programs/regenerant-catalunya/` },
   { id: "actors", label: "Actors", href: `${base}/actors/` },
   { id: "indicators", label: "Indicators", href: `${base}/indicators/` },
   { id: "about", label: "About", href: `${base}/about/` },
 ] as const;
+
+// Regenerant cohort: always four crumbs — map is never labeled "Overview"; current page is emphasized.
+const thirdRegenerantIsCurrent = isRegenerantProgram && programView === "dashboard";
+const fourthMapIsCurrent = isRegenerantProgram && programView === "article";
 ---
 
 <header class="site-nav">
-  <a href={`${base}/`} class="brand" aria-label="ReFi BCN — Bioregional Intelligence System — home">
-    <span class="brand-org">ReFi BCN</span>
-    <span class="brand-sep">•</span>
-    <span class="brand-system">Bioregional Intelligence System</span>
-    <span class="brand-sep">•</span>
-    <span class="brand-dataset">{dataset}</span>
-  </a>
-  <nav aria-label="Primary">
-    <ul>
-      {items.map((it) => (
-        <li>
-          <a href={it.href} class:list={[{ active: current === it.id }]}>
-            {it.label}
-          </a>
-        </li>
-      ))}
-    </ul>
-  </nav>
+  <div class="nav-top">
+    <div class="brand-cluster" role="group" aria-label="Site identity">
+      <a href="https://refibcn.cat" class="brand-piece brand-link">ReFi BCN</a>
+      <span class="dash dash-after-org" aria-hidden="true"> - </span>
+      <a href={bisHome} class="brand-piece brand-link brand-muted brand-bis">Bioregional Intelligence System</a>
+      <span class="dash dash-after-bis" aria-hidden="true"> - </span>
+      {
+        isRegenerantProgram ? (
+          thirdRegenerantIsCurrent ? (
+            <span class="brand-piece brand-here" aria-current="page">{dataset}</span>
+          ) : (
+            <a href={regenerantOverview} class="brand-piece brand-link">{dataset}</a>
+          )
+        ) : (
+          <span class="brand-piece">{dataset}</span>
+        )
+      }
+      {
+        isRegenerantProgram && (
+          <>
+            <span class="dash dash-before-here" aria-hidden="true"> - </span>
+            {
+              fourthMapIsCurrent ? (
+                <span class="brand-piece brand-here" aria-current="page">Catalunya Regenerators Map</span>
+              ) : (
+                <a href={regenerantArticle} class="brand-piece brand-link">Catalunya Regenerators Map</a>
+              )
+            }
+          </>
+        )
+      }
+    </div>
+    <nav aria-label="Primary">
+      <ul>
+        {items.map((it) => (
+          <li>
+            <a href={it.href} class:list={[{ active: current === it.id }]}>
+              {it.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
 </header>
 
 <style>
 .site-nav {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   padding: 1rem 2rem;
   border-bottom: 1px solid var(--ink);
   background: var(--paper);
@@ -49,41 +82,95 @@ const items = [
   top: 0;
   z-index: 10;
 }
-.brand {
+.nav-top {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.brand-cluster {
+  display: inline-flex;
   align-items: baseline;
-  gap: 0.6rem;
-  text-decoration: none;
-  color: var(--ink);
+  flex-wrap: wrap;
+  gap: 0.25rem 0.35rem;
+  /* Single typographic rhythm (matches pre-split brand strip) */
   font-family: var(--mono);
   font-size: 0.78rem;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  line-height: 1.35;
 }
-.brand-org {
+.brand-cluster :is(span, a) {
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+.brand-piece {
+  color: var(--ink);
   font-weight: 500;
+  text-decoration: none;
+}
+/* Dataset / non-link span: same rhythm, no hyperlink styling */
+span.brand-piece {
+  text-decoration: none;
+}
+span.brand-piece:not(.brand-here) {
+  font-weight: 500;
+}
+.brand-muted {
+  color: var(--rule);
+  font-weight: 400;
+}
+a.brand-link.brand-muted {
+  font-weight: 400;
+}
+a.brand-link {
+  border-bottom: 1px solid transparent;
+  transition:
+    border-color var(--t-fast),
+    color var(--t-fast);
+}
+a.brand-link:hover {
+  border-bottom-color: var(--ink);
   color: var(--ink);
 }
-.brand-system {
-  color: var(--rule);
+a.brand-link.brand-muted:hover {
+  color: var(--ink);
 }
-.brand-dataset {
+.brand-here {
   color: var(--ink);
   font-weight: 500;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 0.08em;
 }
-.brand-sep {
+.dash {
   color: var(--rule);
-  opacity: 0.6;
+  opacity: 0.65;
+  user-select: none;
+  font-weight: 400;
 }
 @media (max-width: 880px) {
-  .brand-system { display: none; }
-  .brand-sep:nth-of-type(1) { display: none; }
+  .brand-bis,
+  .dash-after-org {
+    display: none;
+  }
 }
 @media (max-width: 560px) {
-  .brand-sep { display: none; }
-  .brand { gap: 0.4rem; }
-  .brand-org { display: none; }
+  .brand-piece.brand-link[href*="refibcn"] {
+    display: none;
+  }
+  .dash-after-org {
+    display: none;
+  }
+  /* Avoid lone leading "-" when ReFi hides but BIS stays hidden from 880px rule */
+  .dash-after-bis {
+    display: none;
+  }
 }
+
 nav ul {
   list-style: none;
   display: flex;
@@ -107,7 +194,6 @@ nav a:hover {
   border-bottom-color: var(--ink);
 }
 @media (max-width: 640px) {
-  .brand-text { display: none; }
   nav ul { gap: 1rem; }
   nav a { font-size: 0.7rem; }
 }

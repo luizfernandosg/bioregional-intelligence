@@ -11,9 +11,10 @@ const miceli = doc.projects.filter((p) => p.network === "miceli");
 const kerasButi = doc.projects.filter((p) => p.network === "keras-buti");
 const fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 const totalMatching = doc.networks.miceli.contribution_eur + doc.networks["keras-buti"].contribution_eur;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
-<Layout title="Regenerant Catalunya · Program" current="programs" dataset="Regenerant Catalunya">
+<Layout title="Regenerant Catalunya · Program" current="programs" dataset="Regenerant Catalunya" programView="dashboard">
   <section class="hero">
     <p class="eyebrow">Program · 2025–2026 · GG24</p>
     <h1>Regenerant Catalunya</h1>
@@ -27,6 +28,7 @@ const totalMatching = doc.networks.miceli.contribution_eur + doc.networks["keras
       that spans ecological restoration, community projects, and civic innovation.
     </p>
     <div class="cta-row">
+      <a href={`${base}/programs/regenerant-catalunya/article/`}>↗ Catalunya Regenerators Map</a>
       <a href="https://regenerant-catalunya.refibcn.cat">↗ Regenerant Catalunya site</a>
       <a href="https://refibcn.cat">↗ ReFi Barcelona</a>
     </div>
@@ -114,6 +116,16 @@ const totalMatching = doc.networks.miceli.contribution_eur + doc.networks["keras
   transition: background var(--t-fast);
 }
 .cta-row a:hover { background: var(--ink); color: var(--paper); }
+
+.map-pane {
+  min-height: min(520px, 55vh);
+  display: flex;
+  align-items: stretch;
+}
+.map-pane :global(.inset-map) {
+  flex: 1;
+  width: 100%;
+}
 
 .overview {
   padding: 2rem;

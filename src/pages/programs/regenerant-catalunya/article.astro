@@ -17,23 +17,24 @@ const totalMatching = doc.networks.miceli.contribution_eur + doc.networks["keras
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
-<Layout title="Regenerant Catalunya · Article view" current="programs" dataset="Regenerant Catalunya">
+<Layout title="Catalunya Regenerators Map · Regenerant Catalunya" current="programs" dataset="Regenerant Catalunya" programView="article">
   <section class="hero">
-    <p class="eyebrow">Program · 2025–2026 · GG24 · article companion</p>
-    <h1>Regenerant Catalunya</h1>
+    <p class="eyebrow">Catalunya Regenerators Map · Regenerant Catalunya · 2025–2026 · GG24</p>
+    <h1>Catalunya Regenerators Map</h1>
     <p class="lede">
       11 projects · 2 networks · {fmt.format(totalMatching)} matching pool · funded through Gitcoin Grants Round 24.
     </p>
     <p class="prose">
-      Regenerant Catalunya unites a diverse cohort of regenerative initiatives across Catalonia under one
-      funding umbrella. Projects were scouted by two trusted local networks — <strong>Miceli Social</strong>
-      (rural) and <strong>La Fundició / Keras Buti</strong> (urban) — and back a broad definition of regeneration
-      that spans ecological restoration, community projects, and civic innovation.
+      This map shows the <strong>Regenerant Catalunya</strong> cohort at the scale of Catalonia: the actors and
+      projects we are tracking with <strong>Miceli Social</strong> (rural) and <strong>La Fundició / Keras Buti</strong> (urban),
+      placed on the territory with comarca context. Hover comarques, use the chips to zoom regions, and click a marker
+      for the project card. It is a program snapshot for Catalan-level storytelling — the wider <em>Actors</em> atlas
+      will live on its own route when that section ships.
     </p>
     <div class="cta-row">
       <a href="https://regenerant-catalunya.refibcn.cat">↗ Regenerant Catalunya site</a>
       <a href="https://refibcn.cat">↗ ReFi Barcelona</a>
-      <a href={`${base}/programs/regenerant-catalunya/`} class="ghost">↗ BIS dashboard view</a>
+      <a href={`${base}/programs/regenerant-catalunya/`} class="ghost">↗ Regenerant Catalunya 2025 - overview</a>
     </div>
   </section>
 

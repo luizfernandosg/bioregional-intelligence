@@ -14,7 +14,7 @@ export const CATALUNYA_DEFAULT: ProjectionConfig = {
   width: 1400,
   height: 900,
   center: [1.7, 41.85],
-  scale: 7000,
+  scale: 6600,
 };
 
 // L'Hospitalet sub-zoom: a smaller map drawn in the corner showing that metro area only.

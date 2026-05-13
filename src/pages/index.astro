@@ -2,32 +2,12 @@
 // src/pages/index.astro
 import Layout from "../components/Layout.astro";
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const navTiles = [
-  {
-    href: `${base}/programs/regenerant-catalunya/`,
-    eyebrow: "Program",
-    title: "Regenerant Catalunya",
-    body: "11 projects across 2 networks — Miceli Social and La Fundició / Keras Buti — funded through GG24.",
-    status: "Live",
-  },
-  {
-    href: `${base}/actors/`,
-    eyebrow: "Network",
-    title: "Actors",
-    body: "Catalunya's regenerative ecosystem — territorial, ecosystem, and international actors anchored to comarques.",
-    status: "Coming next",
-  },
-  {
-    href: `${base}/indicators/`,
-    eyebrow: "Signals",
-    title: "Indicators",
-    body: "Bioregional-health signals across Catalunya. In development.",
-    status: "In development",
-  },
-];
+const regenerantArticle = `${base}/programs/regenerant-catalunya/article/`;
+const regenerantOverview = `${base}/programs/regenerant-catalunya/`;
+const actorsHref = `${base}/actors/`;
 ---
 
-<Layout title="Home" current="home">
+<Layout title="Home" current="home" dataset="Regenerant Catalunya" programView="home">
   <section class="hero">
     <p class="eyebrow">Bioregional Intelligence · Catalunya</p>
     <h1>A living dashboard for the regenerative ecosystem of Catalunya.</h1>
@@ -38,14 +18,37 @@ const navTiles = [
   </section>
 
   <section class="tiles">
-    {navTiles.map((t) => (
-      <a class="tile" href={t.href}>
-        <span class="eyebrow">{t.eyebrow}</span>
-        <h2>{t.title}</h2>
-        <p>{t.body}</p>
-        <span class="status">{t.status}</span>
-      </a>
-    ))}
+    <article class="tile tile-multi">
+      <span class="eyebrow">Program</span>
+      <h2>Regenerant Catalunya</h2>
+      <p>
+        11 projects across 2 networks — Miceli Social and La Fundició / Keras Buti — funded through GG24.
+        Open the program overview below, or the fullscreen Catalunya Regenerators Map from the Actors tile.
+      </p>
+      <div class="tile-actions">
+        <a class="tile-btn tile-btn-primary" href={regenerantOverview}>↗ Regenerant Catalunya 2025 - overview</a>
+      </div>
+      <span class="status">Live</span>
+    </article>
+    <article class="tile tile-multi">
+      <span class="eyebrow">Network</span>
+      <h2>
+        <a class="tile-title-link" href={actorsHref}>Actors</a>
+      </h2>
+      <p>
+        Catalunya&apos;s regenerative ecosystem — territorial, ecosystem, and international actors anchored to comarques.
+      </p>
+      <div class="tile-actions">
+        <a class="tile-btn tile-btn-primary" href={regenerantArticle}>↗ Catalunya Regenerators Map</a>
+      </div>
+      <span class="status">Coming next</span>
+    </article>
+    <a class="tile" href={`${base}/indicators/`}>
+      <span class="eyebrow">Signals</span>
+      <h2>Indicators</h2>
+      <p>Bioregional-health signals across Catalunya. In development.</p>
+      <span class="status">In development</span>
+    </a>
   </section>
 </Layout>
 
@@ -81,9 +84,65 @@ const navTiles = [
   flex-direction: column;
   gap: 0.5rem;
   transition: background var(--t-fast);
+  color: inherit;
 }
-.tile:hover {
+a.tile:hover {
   background: var(--ivory);
+}
+.tile-multi {
+  gap: 0.65rem;
+}
+.tile-multi h2 { margin: 0; color: var(--ink); }
+.tile-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+.tile-title-link:hover {
+  text-decoration: underline;
+}
+.tile-multi p {
+  flex: 1;
+  color: var(--rule);
+  font-family: var(--serif);
+  margin: 0;
+}
+.tile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+.tile-btn {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border: 1px solid var(--ink);
+  padding: 0.5rem 0.75rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.tile-btn-primary {
+  background: var(--paper);
+  color: var(--ink);
+}
+.tile-btn-primary:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+.tile-btn-secondary {
+  border-color: var(--rule);
+  color: var(--rule);
+  background: transparent;
+}
+.tile-btn-secondary:hover {
+  border-color: var(--ink);
+  background: var(--ivory);
+  color: var(--ink);
 }
 .tile h2 { margin: 0; }
 .tile p {
@@ -99,5 +158,6 @@ const navTiles = [
   color: var(--ink);
   border-top: 1px dashed var(--rule);
   padding-top: 0.5rem;
+  margin-top: 0.35rem;
 }
 </style>
