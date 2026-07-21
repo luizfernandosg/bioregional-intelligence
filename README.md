@@ -1,5 +1,10 @@
 # Bioregional Intelligence — Catalunya
 
+> **⚠️ ABSORBED (2026-07-21):** This surface has been absorbed into
+> [refibcn.cat](https://refibcn.cat) — maps at `/atlas`, the Regenerant Catalunya
+> program at `/projects/regenerant-catalunya`, knowledge at `/commons`.
+> This repo is archived; the deployed pages redirect. History preserved.
+
 A static dashboard for understanding the regenerative ecosystem in and around Catalunya as a bioregion. Combines cohort showcases (e.g., Regenerant Catalunya), actor / network maps, and bioregional-health indicators.
 
 **Live:** [bioregional.refibcn.cat](https://bioregional.refibcn.cat) _(provisional — DNS pending)_

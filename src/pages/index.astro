@@ -1,103 +1,13 @@
 ---
-// src/pages/index.astro
-import Layout from "../components/Layout.astro";
-const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const navTiles = [
-  {
-    href: `${base}/programs/regenerant-catalunya/`,
-    eyebrow: "Program",
-    title: "Regenerant Catalunya",
-    body: "11 projects across 2 networks — Miceli Social and La Fundició / Keras Buti — funded through GG24.",
-    status: "Live",
-  },
-  {
-    href: `${base}/actors/`,
-    eyebrow: "Network",
-    title: "Actors",
-    body: "Catalunya's regenerative ecosystem — territorial, ecosystem, and international actors anchored to comarques.",
-    status: "Coming next",
-  },
-  {
-    href: `${base}/indicators/`,
-    eyebrow: "Signals",
-    title: "Indicators",
-    body: "Bioregional-health signals across Catalunya. In development.",
-    status: "In development",
-  },
-];
+// Absorbed into refibcn.cat (2026-07-21). This stub redirects.
+const TARGET = "https://refibcn.cat/atlas/";
 ---
-
-<Layout title="Home" current="home">
-  <section class="hero">
-    <p class="eyebrow">Bioregional Intelligence · Catalunya</p>
-    <h1>A living dashboard for the regenerative ecosystem of Catalunya.</h1>
-    <p class="lede">
-      Cohort showcases, actor networks, and bioregional-health signals — built openly,
-      published openly, designed to make the territory legible.
-    </p>
-  </section>
-
-  <section class="tiles">
-    {navTiles.map((t) => (
-      <a class="tile" href={t.href}>
-        <span class="eyebrow">{t.eyebrow}</span>
-        <h2>{t.title}</h2>
-        <p>{t.body}</p>
-        <span class="status">{t.status}</span>
-      </a>
-    ))}
-  </section>
-</Layout>
-
-<style>
-.hero {
-  max-width: 60rem;
-  margin: 0 auto;
-  padding: 4rem 2rem 2rem;
-}
-.hero h1 {
-  margin-top: 0.5rem;
-  max-width: 28ch;
-}
-.hero .lede {
-  font-family: var(--serif);
-  font-size: 1.1rem;
-  color: var(--rule);
-  max-width: 50ch;
-}
-.tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  gap: 1px;
-  background: var(--ink);
-  border-top: 1px solid var(--ink);
-  border-bottom: 1px solid var(--ink);
-}
-.tile {
-  background: var(--paper);
-  padding: 2rem;
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  transition: background var(--t-fast);
-}
-.tile:hover {
-  background: var(--ivory);
-}
-.tile h2 { margin: 0; }
-.tile p {
-  flex: 1;
-  color: var(--rule);
-  font-family: var(--serif);
-}
-.tile .status {
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink);
-  border-top: 1px dashed var(--rule);
-  padding-top: 0.5rem;
-}
-</style>
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta http-equiv="refresh" content={`0; url=${TARGET}`} />
+<link rel="canonical" href={TARGET} />
+<title>Moved — ReFi BCN</title>
+</head><body>
+<p>This page moved to <a href={TARGET}>{TARGET}</a>.</p>
+</body></html>
